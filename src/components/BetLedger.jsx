@@ -5,7 +5,7 @@ import { useState } from "react";
 function BetLedger({ bets = [], roundNumber, winningId, onToggle, isOpen }) {
 
   return (
-    <div className={` h-screen sticky top-0 bg-zinc-200 text-card-foreground flex flex-col transition-all duration-300 ${isOpen ? "translate-x-0 w-1/5" : "translate-x-full w-0"} `}>
+    <div className={`betledger h-screen sticky top-0 bg-zinc-200 text-card-foreground flex flex-col transition-all duration-300 ${isOpen ? "md:translate-x-0 md:w-1/5" : "md:translate-x-full md:w-0"} `}>
       <div className="p-4 border-b border-gray-300">
         <h2 className=" text-xl font-bold text-stone-950 tracking-tight text-start">Apuestas</h2>
         <p className="text-xs mt-0.5 text-stone-800 text-start">Ronda #{roundNumber}</p>

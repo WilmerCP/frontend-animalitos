@@ -109,12 +109,12 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
   }, [highlightedId, winnerId, isSpinning]);
 
   return (
-    <div className="relative flex-1 aspect-square mx-auto">
+    <div className="relative md:flex-1 w-full md:w-auto aspect-square mx-0">
       {/* Pointer component positioned above the wheel */}
       <Pointer />
       <svg
         viewBox="0 0 400 400"
-        className="w-full max-w-[700px] mx-auto"
+        className="w-full max-w-[700px] md:mx-auto"
         style={{
           transform: `rotate(-${rotation}deg)`,
           transition: speed === 0

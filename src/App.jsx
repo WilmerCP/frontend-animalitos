@@ -15,13 +15,13 @@ function App() {
 
 
   return (
-    <div className=' flex flex-row overflow-x-hidden w-full h-screen bg-slate-950 text-white'>
-      <div className="flex flex-col items-center justify-center w-1/2 h-full py-10 box-border">
+    <div className=' flex flex-col md:flex-row overflow-x-hidden w-full h-screen bg-slate-950 text-white'>
+      <div className="flex flex-col items-center justify-center w-full md:w-1/2 h-full py-10 px-1 box-border">
         <Wheel isSpinning={true} winnerId={winnerId} highlightedId={null} />
       </div>
 
 
-      <div className={`flex flex-col gap-2  box-border flex-1 ${sidebarOpen ? "pr-12 py-8" : "px-10 py-10"} `}>
+      <div className={`flex flex-col gap-2  box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"} `}>
         <BettingGrid
           onSelectAnimal={(id) => { setSelectedAnimalId(id) }}
           selectedAnimal={null}

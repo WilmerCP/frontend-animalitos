@@ -6,15 +6,15 @@ function Pointer() {
       style={{
         position: "absolute",
         left: "50%",
-        top: 0,
+        top: -18,
         transform: "translateX(-50%)",
         zIndex: 10,
-        width: 40,
-        height: 40,
+        width: 60,
+        height: 60,
         pointerEvents: "none"
       }}
     >
-      <svg width="40" height="40" viewBox="0 0 40 40">
+      <svg width="60" height="60" viewBox="0 0 40 40">
         <polygon
           points="10,10 30,10 20,35"
           fill="hsl(4, 67%, 50%)"
