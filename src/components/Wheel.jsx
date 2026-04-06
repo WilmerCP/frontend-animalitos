@@ -9,29 +9,32 @@ const SEGMENT_ANGLE = 360 / 32;
 function Wheel({ isSpinning, highlightedId, winnerId }) {
 
   const [rotation, setRotation] = useState(0);
-  const [speed, setSpeed] = useState(0.05); // grados por frame, lento al inicio
+  const [showWinner, setShowWinner] = useState(false);
 
   useEffect(() => {
-    if (winnerId != null) {
+    if (isSpinning == false && winnerId != null) {
+      setShowWinner(false); 
       spinToWinner(winnerId);
       console.log("winner has id: " + winnerId)
+    }else{
+      setShowWinner(false);
     }
-  }, [winnerId]);
+  }, [winnerId,isSpinning]);
 
   useEffect(() => {
     let raf;
 
     function animate() {
-      setRotation(prev => (prev + speed) % 360);
+      setRotation(prev => (prev + 0.05) % 360);
       raf = requestAnimationFrame(animate);
     }
 
-    if (isSpinning && speed > 0) {
+    if (isSpinning) {
       raf = requestAnimationFrame(animate);
     }
 
     return () => cancelAnimationFrame(raf);
-  }, [isSpinning, speed]);
+  }, [isSpinning]);
 
   const spinToWinner = (winnerId) => {
     const N = ANIMALS.length;
@@ -43,13 +46,13 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
     const extraRotations = 5;
     const finalAngle = targetAngle + 360 * extraRotations;
 
-    // Desactivamos el giro lento
-    setSpeed(0);
-
     // Animación CSS para girar rápido y detenerse en el animal
     setRotation(prev => prev); // fuerza el repaint
     setTimeout(() => {
       setRotation(finalAngle);
+      setTimeout(() => {
+      setShowWinner(true); // Show winner label after animation
+    }, 4000);
     }, 50);
   };
 
@@ -112,12 +115,18 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
     <div className="relative md:flex-1 w-full md:w-auto aspect-square mx-0">
       {/* Pointer component positioned above the wheel */}
       <Pointer />
+      {showWinner && winnerId != null &&
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 rounded-xl
+          shadow-lg border-4 border-slate-900 text-black font-bold text-2xl drop-shadow-[0_2px_8px_rgba(255,215,0,0.7)] text-center p-2 animate-in fade-in duration-500">
+          {`Ganador:`} <br/>
+          {`${ANIMALS[winnerId].name} ${ANIMALS[winnerId].emoji}`}
+        </span>}
       <svg
         viewBox="0 0 400 400"
         className="w-full max-w-[700px] md:mx-auto"
         style={{
           transform: `rotate(-${rotation}deg)`,
-          transition: speed === 0
+          transition: isSpinning == false
             ? "transform 4s cubic-bezier(0.15, 0.6, 0.25, 1)"
             : "none"
         }}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ANIMALS } from "../lib/animals.js";
 
-function TicketSelector({ animalId, onConfirm, onClose, bets = [], setBet, compact }) {
+function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
   const [tickets, setTickets] = useState(1);
   const animal = ANIMALS[animalId];
 
@@ -11,13 +11,7 @@ function TicketSelector({ animalId, onConfirm, onClose, bets = [], setBet, compa
 
     if (!disabled) {
 
-      setBet(prev => [
-        ...prev,
-        { id: animalId, amount: tickets }
-      ]);
-      
-      onConfirm();
-      onClose();
+      onConfirm(animalId,tickets);
 
     }
 
