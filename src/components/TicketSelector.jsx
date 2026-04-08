@@ -1,30 +1,30 @@
 import { useState, useEffect } from "react";
 import ANIMALS from "../lib/animals.js";
 
-function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
-  const [tickets, setTickets] = useState(1);
+function TicketSelector({ animalId, onConfirm, onAdd, onClose, bets = [], compact, roundIsActive, tickets, setTickets }) {
   const animal = ANIMALS[animalId];
 
-  const disabled = bets.some(bet => bet.id === animalId);
 
+  const disabled = bets.some(bet => bet.id === animalId);
   function placeBet() {
 
-    if (!disabled) {
+    if (!disabled && roundIsActive) {
 
-      onConfirm(animalId,tickets);
+      onConfirm(animalId, tickets);
 
     }
 
   }
 
-  useEffect(() => {
-    const placedBet = bets.find(bet => bet.id === animalId);
-    if (placedBet) {
-      setTickets(placedBet.amount);
-    } else {
-      setTickets(1);
+  function addAnimal() {
+
+    if (!disabled && roundIsActive) {
+
+      onAdd(animalId, tickets);
+
     }
-  }, [animalId, bets]);
+
+  }
 
 
 
@@ -48,7 +48,7 @@ function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
             <button
               key={n}
               onClick={() => {
-                if (!disabled) {
+                if (!disabled && roundIsActive) {
 
                   setTickets(n)
 
@@ -56,12 +56,13 @@ function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
 
               }}
               className={`w-7 h-7 rounded text-sm font-medium transition-all
+              
 
-              ${tickets === n
-                  ? disabled
+                ${tickets !== n
+                  ? "bg-slate-600 hover:bg-slate-500"
+                  : disabled
                     ? "bg-yellow-500"
-                    : "bg-red-500"
-                  : "bg-slate-600 hover:bg-slate-500"
+                    : roundIsActive ? "bg-red-500" : "bg-slate-600 hover:bg-slate-500"
                 }`}
             >
               {n}
@@ -71,9 +72,16 @@ function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
         <button
           onClick={placeBet}
           className={`p-2 rounded font-sm font-medium transition-all ml-2 
-           ${disabled ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
+           ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
         >
           Comprar
+        </button>
+        <button
+          onClick={addAnimal}
+          className={`p-2 rounded font-sm font-medium transition-all ml-2 
+           ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-yellow-600 hover:bg-yellow-500 "}`}
+        >
+          Carrito
         </button>
       </div>
 
@@ -94,7 +102,7 @@ function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
           <button
             key={n}
             onClick={() => {
-              if (!disabled) {
+              if (!disabled && roundIsActive) {
 
                 setTickets(n)
 
@@ -117,9 +125,16 @@ function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
       <button
         onClick={placeBet}
         className={`py-2 px-4 rounded font-sm font-medium transition-all ml-3 
-           ${disabled ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
+           ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
       >
         Comprar
+      </button>
+      <button
+        onClick={addAnimal}
+        className={`py-2 px-4 rounded font-sm font-medium transition-all ml-3 
+           ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-yellow-600 hover:bg-yellow-500 "}`}
+      >
+        Agregar
       </button>
       <button onClick={onClose} className="text-slate-500 hover:text-white text-lg mx-2">
         ✕

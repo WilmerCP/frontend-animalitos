@@ -3,7 +3,7 @@ import { abi as usdt_abi } from './usdt_abi.json';
 
 const abi = [...animalitos_abi, ...usdt_abi];
 
-import { formatAmount, simplifyAmount } from './utils';
+import { formatAmount, simplifyAmount, formatAmountArray } from './utils';
 
 import { createPublicClient, http, createWalletClient, custom } from 'viem';
 import { hardhat } from 'viem/chains'
@@ -249,6 +249,35 @@ async function claimReward(round_number){
 
 }
 
+async function placeMultipleBets(list){
+
+    const txHash = await walletClient.writeContract({
+      address: CONTRACT,
+      abi: abi,
+      functionName: 'placeMultipleBets',
+      args: [formatAmountArray(list)],
+      chain: hardhat,
+      gas: 500000n
+    })
+
+    console.log('Transaction sent:', txHash)
+
+    // optional: wait for it to be mined
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+
+    if (receipt.status === 'success') {
+      console.log('Bet placing transaction confirmed and successful!', receipt);
+
+      return true;
+
+    } else {
+      console.error('Bet placing transaction failed!', receipt);
+      return false;
+    }
+
+
+}
+
 export {
 
     getChainId,
@@ -262,6 +291,7 @@ export {
     fetchRoundInfo,
     fetchTotalAnimalBets,
     fetchClaimedStatus,
+    placeMultipleBets,
     CONTRACT,
     animalitos_abi as ANIMALITOS_ABI,
     publicClient

@@ -41,11 +41,11 @@ export default function RecentWinners({ currentRound, roundIsActive }) {
         if(currentRound != null){
             loadRounds()
         }
-    }, [currentRound])
+    }, [currentRound,roundIsActive])
 
     if (loading) {
         return (
-            <div className="p-4 text-white">
+            <div className="p-4 text-white  bg-white/5 border border-white/10 rounded-xl w-full text-center">
                 Cargando resultados de las últimas rondas...
             </div>
         )

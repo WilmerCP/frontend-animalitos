@@ -1,48 +1,50 @@
 import ANIMALS from "../lib/animals.js";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import ClaimReward  from './ClaimReward.jsx';
-import { useState,useEffect } from "react";
-import { claimReward,fetchTotalAnimalBets } from '../lib/blockchain.js'
+import { FaChevronLeft, FaChevronRight, FaPlus, FaMinus } from "react-icons/fa";
+import ClaimReward from './ClaimReward.jsx';
+import { useState, useEffect } from "react";
+import { claimReward, fetchTotalAnimalBets } from '../lib/blockchain.js'
 
-function BetLedger({ bets = [], roundNumber, roundInfo, onToggle, isOpen, didWin, claimed, setClaimed }) {
+function BetLedger({ bets = [], cart = [], roundNumber, roundInfo, roundIsActive, onToggle, isOpen, didWin, claimed, setClaimed, updateCartItem, handleBuyAll }) {
 
-  let [earnings,setEarnings] = useState(null);
+  let [earnings, setEarnings] = useState(null);
 
   const winningId = roundInfo.winningAnimal;
 
-  async function calculateEarnings(){
+  const cartNotEmpty = cart.some((element) => element > 0);
 
-    const totalAnimalBets = await fetchTotalAnimalBets(roundNumber,winningId);
-    console.log("total animal bets: ",totalAnimalBets);
+  async function calculateEarnings() {
+
+    const totalAnimalBets = await fetchTotalAnimalBets(roundNumber, winningId);
+    console.log("total animal bets: ", totalAnimalBets);
 
     const winningBet = bets.find(bet => bet.id === winningId);
 
     const prize = (winningBet.amount * roundInfo.claimablePrize) / totalAnimalBets;
     setEarnings(prize);
-    
-    console.log("PRIZE: ",prize);
+
+
   }
 
-  useEffect(()=>{
+  useEffect(() => {
 
-    if(didWin){
+    if (didWin) {
 
       calculateEarnings();
 
 
     }
 
-  },[didWin]);
+  }, [didWin]);
 
-  async function handleClaims(){
+  async function handleClaims() {
 
-   let result = await claimReward(roundNumber);
+    let result = await claimReward(roundNumber);
 
-   if(result){
+    if (result) {
 
-     setClaimed(true);
+      setClaimed(true);
 
-   }
+    }
 
   }
 
@@ -55,13 +57,67 @@ function BetLedger({ bets = [], roundNumber, roundInfo, onToggle, isOpen, didWin
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400 scrollbar-track-gray-200 scrollbar-track-zinc-200">
+
+        {cartNotEmpty && roundIsActive &&
+          <div className="space-y-2 p-3 rounded-xl border-2 border-dashed border-red-400 bg-yellow-400/5 mb-5">
+            <p className="text-xs uppercase text-stone-950 font-semibold">
+              Pendiente
+            </p>
+            {cart.map((amount, index) => {
+              const animal = ANIMALS[index];
+
+              if (amount <= 0) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={index + 100}
+                  className={`flex items-center gap-2 p-2 rounded-md text-sm transition-all bg-gray-100`}>
+                  <span className="text-base">{animal.emoji}</span>
+                  <span className="font-semibold flex-1 text-stone-800">{animal.name}</span>
+                  <span className="font-body text-xs text-stone-800">
+                    {amount} {amount === 1 ? "ticket" : "tickets"}
+                  </span>
+                  <button className={"text-black"} onClick={() => { updateCartItem(index, amount - 1) }}>
+                    <FaMinus />
+                  </button>
+                  <button className="text-black" onClick={() => { updateCartItem(index, amount + 1) }}>
+                    <FaPlus />
+                  </button>
+
+                </div>
+              );
+            })}
+            <button
+              onClick={handleBuyAll}
+              className={`
+                w-full mt-3 py-3 rounded-md text-sm
+                transition-all duration-200
+
+                bg-green-600
+
+                hover:bg-green-500
+                hover:scale-[1.02]
+
+                active:scale-[0.98]
+
+                disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100
+
+                shadow-lg shadow-yellow-500/20
+                `}>
+              Comprar todo
+            </button>
+          </div>
+        }
+
         {bets.length === 0 ? (
           <p className="text-sm italic text-center text-stone-700 mt-8">
             No has hecho ninguna apuesta
           </p>
         ) : (
           <div className="space-y-2">
-            {didWin && <ClaimReward earnings={earnings} claimed={claimed} onClaim={handleClaims}/>}
+            {didWin && <ClaimReward earnings={earnings} claimed={claimed} onClaim={handleClaims} />}
             {bets.map((bet) => {
               const animal = ANIMALS[bet.id];
               const isWinner = winningId === bet.id;
@@ -69,8 +125,8 @@ function BetLedger({ bets = [], roundNumber, roundInfo, onToggle, isOpen, didWin
                 <div
                   key={bet.id}
                   className={`flex items-center gap-2 p-2 rounded-md text-sm transition-all ${isWinner
-                      ? "bg-yellow-100 ring-2 ring-yellow-400"
-                      : "bg-gray-100"
+                    ? "bg-yellow-100 ring-2 ring-yellow-400"
+                    : "bg-gray-100"
                     }`}
                 >
                   <span className="text-base">{animal.emoji}</span>
@@ -103,7 +159,7 @@ function BetLedger({ bets = [], roundNumber, roundInfo, onToggle, isOpen, didWin
         className="absolute left-[-32px] bottom-6 bg-zinc-200 text-stone-900 hover:text-yellow-500 rounded-l-md p-2  transition"
         onClick={() => onToggle()}
       >
-        {isOpen ? <FaChevronRight  /> : <FaChevronLeft />}
+        {isOpen ? <FaChevronRight /> : <FaChevronLeft />}
       </button>
     </div>
   );
