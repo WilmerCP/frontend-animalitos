@@ -109,24 +109,44 @@ async function fetchRoundNumber(){
           functionName: 'currentRound'
         });
 
-    return round;
+    return Number(round);
 
 }
 
-async function fetchWinner(round_number){
+async function fetchRoundInfo(round_number){
 
     if(round_number == null){
         return null;
     }
 
-    const winner = await publicClient.readContract({
+    const roundInfo = await publicClient.readContract({
           address: CONTRACT,
           abi: animalitos_abi,
-          functionName: 'getWinningAnimal',
+          functionName: 'rounds',
           args: [round_number]
         });
 
-    return winner;
+    const [
+      totalPool,
+      winningAnimal,
+      finished,
+      roundStartTime,
+      roundEndTime,
+      isSpecial,
+      claimablePrize,
+      remainingPrize
+    ] = roundInfo;
+
+    return {
+      totalPool: simplifyAmount(totalPool),
+      winningAnimal,
+      finished,
+      roundStartTime: Number(roundStartTime),
+      roundEndTime: Number(roundEndTime),
+      isSpecial,
+      claimablePrize: simplifyAmount(claimablePrize),
+      remainingPrize: simplifyAmount(remainingPrize)
+    };
 
 }
 
@@ -140,6 +160,34 @@ async function fetchUserBets(round_number){
         });
 
     return bets.map((big)=>(simplifyAmount(big)));
+
+}
+
+async function fetchTotalAnimalBets(round_number,animalId){
+
+    if (round_number == null || animalId == null) return 0;
+
+    const totalAnimalBets = await publicClient.readContract({
+          address: CONTRACT,
+          abi: animalitos_abi,
+          functionName: 'totalAnimalBets',
+          args: [round_number,animalId]
+        });
+
+    return simplifyAmount(totalAnimalBets);
+
+}
+
+async function fetchClaimedStatus(round_number){
+
+    const status = await publicClient.readContract({
+          address: CONTRACT,
+          abi: animalitos_abi,
+          functionName: 'claimed',
+          args: [round_number,account]
+        });
+
+    return status;
 
 }
 
@@ -172,18 +220,50 @@ async function placeBet(animalId,amount){
 
 }
 
-export default {
+async function claimReward(round_number){
+
+    const txHash = await walletClient.writeContract({
+      address: CONTRACT,
+      abi: abi,
+      functionName: 'claimPrize',
+      args: [round_number],
+      chain: hardhat,
+      gas: 500000n
+    })
+
+    console.log('Transaction sent:', txHash)
+
+    // optional: wait for it to be mined
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash })
+
+    if (receipt.status === 'success') {
+      console.log('Prize claiming transaction confirmed and successful!', receipt);
+
+      return true;
+
+    } else {
+      console.error('Prize claim transaction failed!', receipt);
+      return false;
+    }
+
+
+}
+
+export {
 
     getChainId,
     approve,
     placeBet,
+    claimReward,
     fetchRoundStatus,
     fetchRoundNumber,
     fetchAllowance,
     fetchUserBets,
-    fetchWinner,
+    fetchRoundInfo,
+    fetchTotalAnimalBets,
+    fetchClaimedStatus,
     CONTRACT,
-    ANIMALITOS_ABI : animalitos_abi,
+    animalitos_abi as ANIMALITOS_ABI,
     publicClient
 
 }

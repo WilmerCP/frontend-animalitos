@@ -1,5 +1,5 @@
 import React from "react";
-import { ANIMALS } from "../lib/animals";
+import ANIMALS from "../lib/animals";
 
 
 function BettingGrid({

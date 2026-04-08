@@ -4,13 +4,16 @@ import BettingGrid from './components/BettingGrid.jsx'
 import TicketSelector from './components/TicketSelector.jsx'
 import BetLedger from './components/BetLedger.jsx'
 import AllowancePopup from './components/AllowancePopup.jsx'
+import RecentWinners from './components/RecentWinners.jsx'
+import RecentPrizes from './components/RecentPrizes.jsx'
+import RoundDataSection from './components/RoundDataSection.jsx'
 import './App.css'
-import { ANIMALS } from './lib/animals.js'
-import blockchain from './lib/blockchain.js'
+import ANIMALS  from './lib/animals.js'
+import * as blockchain from './lib/blockchain.js'
+import { simplifyAmount } from './lib/utils.js'
 
 function App() {
 
-  let [winnerId, setWinnerId] = useState(null);
   let [placedBets, setPlacedBets] = useState([]);
   let [selectedAnimalId, setSelectedAnimalId] = useState(null);
   let [sidebarOpen, setSidebarOpen] = useState(true);
@@ -19,10 +22,38 @@ function App() {
   let [showAllowancePopup, setShowAllowancePopup] = useState(false);
   //let [tokenAllowance, setAllowance] = useState(0);
   let [pendingTransaction, setPendingTransaction] = useState(null);
+  let [roundInfo, setRoundInfo] = useState({
+    totalPool: null,
+    winningAnimal: null,
+    finished: null,
+    roundStartTime: null,
+    roundEndTime: null,
+    isSpecial: false,
+    claimablePrize: 0,
+    remainingPrize: 0
+  });
+  let [claimed, setClaimed ] = useState(false);
 
-  async function updateWinner(round) {
-    let winner = await blockchain.fetchWinner(round);
-    setWinnerId(winner);
+  const didWin = placedBets.some((bet)=>bet.id === roundInfo.winningAnimal);
+
+
+  async function updateRoundInfo(round,bets) {
+    //Returns an array, not an object
+    let info = await blockchain.fetchRoundInfo(round);
+    console.log("ROUND INFO")
+    console.log(info)
+    
+    setRoundInfo(info);
+
+    if(bets.some((bet)=>bet.id === info.winningAnimal)){
+
+      let status = await blockchain.fetchClaimedStatus(round);
+
+      console.log("claimed: "+status)
+
+      setClaimed(status);
+
+    }
 
   }
 
@@ -52,13 +83,13 @@ function App() {
             logs.forEach((log) => {
               const { roundNumber, winningAnimal } = log.args;
               setRoundIsActive(false);
-              updateWinner(round);
+              updateRoundInfo(round,bets);
 
             });
           },
         });
       } else {
-        updateWinner(round);
+        updateRoundInfo(round,bets);
 
         unwatch = blockchain.publicClient.watchContractEvent({
           address: blockchain.CONTRACT,
@@ -68,7 +99,7 @@ function App() {
             console.log("Round started event received:", logs);
             logs.forEach((log) => {
               const { roundNumber } = log.args;
-              setCurrentRound(roundNumber);
+              setCurrentRound(Number(roundNumber));
               setWinnerId(null);
               setRoundIsActive(true);
             });
@@ -79,7 +110,6 @@ function App() {
 
     fetchData();
 
-    // ✓ This is now in useEffect scope, React will actually call it
     return () => {
       if (unwatch) unwatch();
     };
@@ -88,8 +118,6 @@ function App() {
 
 
   async function placeBet(animalId, amount) {
-
-    console.log("placing a bet")
 
     setSidebarOpen(true)
 
@@ -171,32 +199,52 @@ function App() {
           onConfirmSingle={allowTransaction}
           animal={ANIMALS.find(a => a.id === selectedAnimalId)?.name} />}
 
-      <div className=' flex flex-col md:flex-row overflow-x-hidden w-full h-screen bg-slate-950 text-white'>
-        <div className="flex flex-col items-center justify-center w-full md:w-1/2 h-full py-10 px-1 box-border">
-          <h2 className='mb-6 font-bold text-xl'>{roundStatusText}</h2>
-          <Wheel isSpinning={roundIsActive} winnerId={winnerId} highlightedId={null} />
+      <div className='flex flex-col md:flex-row w-full md:h-screen overflow-x-hidden bg-slate-950 text-white'>
+        
+        {/* Main scrollable content */}
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+
+          {/* Top section - wheel + betting grid, locked to viewport height */}
+          <div className="grid md:grid-cols-2">
+
+            {/* Wheel */}
+            <div className="flex flex-col items-center justify-center h-screen py-10 px-1 overflow-hidden sticky top-0">
+              <h2 className='mb-6 font-bold text-xl'>{roundStatusText}</h2>
+              <Wheel isSpinning={roundIsActive} winnerId={roundInfo.winningAnimal} highlightedId={null} />
+            </div>
+
+            {/* Betting grid */}
+            <div className={`flex flex-col gap-2 box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"}`}>
+              <BettingGrid
+                onSelectAnimal={(id) => { setSelectedAnimalId(id) }}
+                selectedAnimal={null}
+                disabled={false}
+                columnNumber={sidebarOpen ? '4' : '6'}
+                onHoverAnimal={() => { }}
+              />
+              {selectedAnimalId != null &&
+                <TicketSelector
+                  maxTickets={5}
+                  bets={placedBets}
+                  onClose={() => { setSelectedAnimalId(null) }}
+                  onConfirm={placeBet}
+                  animalId={selectedAnimalId}
+                  compact={sidebarOpen}
+                />}
+            </div>
+
+          </div>
+
+          {/* Below the fold - full width */}
+          <div className="w-full bg-slate-950 text-white px-8 py-8">
+            <RoundDataSection currentRound={currentRound} roundIsActive={roundIsActive}/>
+          </div>
+
         </div>
 
+        {/* Sticky sidebar */}
+        <BetLedger bets={placedBets} roundInfo={roundInfo} isOpen={sidebarOpen} roundNumber={currentRound} didWin={didWin} claimed={claimed} setClaimed={setClaimed} onToggle={() => { setSidebarOpen((state) => !state) }} />
 
-        <div className={`flex flex-col gap-2  box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"} `}>
-          <BettingGrid
-            onSelectAnimal={(id) => { setSelectedAnimalId(id) }}
-            selectedAnimal={null}
-            disabled={false}
-            columnNumber={sidebarOpen ? '4' : '6'}
-            onHoverAnimal={() => { }}
-          />
-          {selectedAnimalId != null &&
-            <TicketSelector
-              maxTickets={5}
-              bets={placedBets}
-              onClose={() => { setSelectedAnimalId(null) }}
-              onConfirm={placeBet}
-              animalId={selectedAnimalId}
-              compact={sidebarOpen}
-            />}
-        </div>
-        <BetLedger bets={placedBets} isOpen={sidebarOpen} roundNumber={currentRound} onToggle={() => { setSidebarOpen((state) => !state) }} />
       </div>
     </>
   )

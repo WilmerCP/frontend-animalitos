@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
-import { ANIMALS } from "../lib/animals.js";
+import ANIMALS from "../lib/animals.js";
 import Pointer from "./Pointer.jsx";
 
 const SEGMENT_ANGLE = 360 / 32;
@@ -112,7 +112,7 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
   }, [highlightedId, winnerId, isSpinning]);
 
   return (
-    <div className="relative md:flex-1 w-full md:w-auto aspect-square mx-0">
+    <div className="relative md:flex-1 w-full h-full md:w-auto aspect-square mx-0">
       {/* Pointer component positioned above the wheel */}
       <Pointer />
       {showWinner && winnerId != null &&

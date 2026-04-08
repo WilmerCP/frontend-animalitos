@@ -1,8 +1,51 @@
-import { ANIMALS } from "../lib/animals.js";
+import ANIMALS from "../lib/animals.js";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useState } from "react";
+import ClaimReward  from './ClaimReward.jsx';
+import { useState,useEffect } from "react";
+import { claimReward,fetchTotalAnimalBets } from '../lib/blockchain.js'
 
-function BetLedger({ bets = [], roundNumber, winningId, onToggle, isOpen }) {
+function BetLedger({ bets = [], roundNumber, roundInfo, onToggle, isOpen, didWin, claimed, setClaimed }) {
+
+  let [earnings,setEarnings] = useState(null);
+
+  const winningId = roundInfo.winningAnimal;
+
+  async function calculateEarnings(){
+
+    const totalAnimalBets = await fetchTotalAnimalBets(roundNumber,winningId);
+    console.log("total animal bets: ",totalAnimalBets);
+
+    const winningBet = bets.find(bet => bet.id === winningId);
+
+    const prize = (winningBet.amount * roundInfo.claimablePrize) / totalAnimalBets;
+    setEarnings(prize);
+    
+    console.log("PRIZE: ",prize);
+  }
+
+  useEffect(()=>{
+
+    if(didWin){
+
+      calculateEarnings();
+
+
+    }
+
+  },[didWin]);
+
+  async function handleClaims(){
+
+   let result = await claimReward(roundNumber);
+
+   if(result){
+
+     setClaimed(true);
+
+   }
+
+  }
+
 
   return (
     <div className={`betledger h-screen sticky top-0 bg-zinc-200 text-card-foreground flex flex-col transition-all duration-300 ${isOpen ? "md:translate-x-0 md:w-1/5" : "md:translate-x-full md:w-0"} `}>
@@ -18,6 +61,7 @@ function BetLedger({ bets = [], roundNumber, winningId, onToggle, isOpen }) {
           </p>
         ) : (
           <div className="space-y-2">
+            {didWin && <ClaimReward earnings={earnings} claimed={claimed} onClaim={handleClaims}/>}
             {bets.map((bet) => {
               const animal = ANIMALS[bet.id];
               const isWinner = winningId === bet.id;
@@ -35,7 +79,7 @@ function BetLedger({ bets = [], roundNumber, winningId, onToggle, isOpen }) {
                     {bet.amount} {bet.amount === 1 ? "ticket" : "tickets"}
                   </span>
                   {isWinner && (
-                    <span className=" text-xs font-body font-semibold">WIN</span>
+                    <span className=" text-xs font-body font-semibold text-green-600">WIN</span>
                   )}
                 </div>
               );

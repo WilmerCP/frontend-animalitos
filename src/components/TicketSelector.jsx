@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ANIMALS } from "../lib/animals.js";
+import ANIMALS from "../lib/animals.js";
 
 function TicketSelector({ animalId, onConfirm, onClose, bets = [], compact }) {
   const [tickets, setTickets] = useState(1);

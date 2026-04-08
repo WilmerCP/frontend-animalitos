@@ -1,4 +1,4 @@
-export const ANIMALS = [
+export default [
   { id: 0, name: "Leon", emoji: "🦁", color: "hsl(40, 80%, 50%)" },
   { id: 1, name: "Tigre", emoji: "🐅", color: "hsl(30, 80%, 50%)" },
   { id: 2, name: "Pantera", emoji: "🐆", color: "hsl(50, 20%, 30%)" },
