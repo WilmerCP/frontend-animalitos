@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { FaChevronLeft, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 /**
  * DrawerMenu
@@ -93,26 +94,26 @@ const DrawerMenu = ({ isOpen, isDrawerOpen, onClose, children }) => {
   );
 };
 
-const MenuContent = ({ onClose }) => {
+const MenuContent = () => {
   const links = [
-    { label: "Inicio", icon: "🎡" },
-    { label: "Historial", icon: "📋" },
-    { label: "Estadísticas", icon: "📊" },
-    { label: "Configuración", icon: "⚙️" },
-    { label: "Ayuda", icon: "❓" },
+    { label: "Inicio", icon: "🎡", path: "/" },
+    { label: "Historial", icon: "📋", path: "/" },
+    { label: "Estadísticas", icon: "📊", path: "/" },
+    { label: "Configuración", icon: "⚙️", path: "/" },
+    { label: "Información", icon: "❓", path: "/faq" },
   ];
 
   return (
     <nav className="space-y-1">
-      {links.map(({ label, icon }) => (
-        <button
+      {links.map(({ label, icon, path }) => (
+        <Link
+          to={path}
           key={label}
-          onClick={onClose}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-stone-800 hover:bg-zinc-200 transition-colors text-left"
         >
           <span className="text-base">{icon}</span>
           {label}
-        </button>
+        </Link>
       ))}
     </nav>
   );
