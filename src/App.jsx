@@ -284,7 +284,15 @@ function App() {
       setShowAllowancePopup(false);
       if (pendingTransaction != null) {
 
-        placeBet(pendingTransaction.animalId, pendingTransaction.amount);
+        if (pendingTransaction.animalId == null) {
+
+          handleBuyAll();
+
+        } else {
+
+          placeBet(pendingTransaction.animalId, pendingTransaction.amount);
+
+        }
 
       }
 
@@ -300,7 +308,16 @@ function App() {
 
       if (response == true) {
         setShowAllowancePopup(false);
-        placeBet(pendingTransaction.animalId, pendingTransaction.amount);
+
+        if (pendingTransaction.animalId == null) {
+
+          handleBuyAll();
+
+        } else {
+
+          placeBet(pendingTransaction.animalId, pendingTransaction.amount);
+
+        }
 
       }
 
@@ -370,7 +387,7 @@ function App() {
                   <span className='text-md'>Balance: <b>{hideBalance ? '••••' : `${tokenBalance} $`}</b></span>
                   {hideBalance ? <IoMdEyeOff className='text-lg' /> : <IoMdEye className='text-lg' />}
                 </div>
-                <GiHamburgerMenu className='text-2xl text-white transition-all duration-200 hover:scale-[1.1] active:scale-[0.98] cursor-pointer' onClick={() => setDrawerOpen((prev) => { setSidebarOpen(!prev); return !prev})} />
+                <GiHamburgerMenu className='text-2xl text-white transition-all duration-200 hover:scale-[1.1] active:scale-[0.98] cursor-pointer' onClick={() => setDrawerOpen((prev) => { setSidebarOpen(!prev); return !prev })} />
               </div>
               <Wheel isSpinning={roundIsActive} winnerId={roundInfo.winningAnimal} highlightedId={selectedAnimalId} />
             </div>

@@ -257,7 +257,6 @@ async function placeMultipleBets(list){
       functionName: 'placeMultipleBets',
       args: [formatAmountArray(list)],
       chain: hardhat,
-      gas: 500000n
     })
 
     console.log('Transaction sent:', txHash)
