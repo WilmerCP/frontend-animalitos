@@ -71,14 +71,14 @@ function TicketSelector({ animalId, onConfirm, onAdd, onClose, bets = [], compac
         </div>
         <button
           onClick={placeBet}
-          className={`p-2 rounded font-sm font-medium transition-all ml-2 
+          className={`p-2 rounded text-sm font-medium transition-all ml-2 
            ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
         >
           Comprar
         </button>
         <button
           onClick={addAnimal}
-          className={`p-2 rounded font-sm font-medium transition-all ml-2 
+          className={`p-2 rounded text-sm font-medium transition-all ml-2 
            ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-yellow-600 hover:bg-yellow-500 "}`}
         >
           Carrito
@@ -124,14 +124,14 @@ function TicketSelector({ animalId, onConfirm, onAdd, onClose, bets = [], compac
       </div>
       <button
         onClick={placeBet}
-        className={`py-2 px-4 rounded font-sm font-medium transition-all ml-3 
+        className={`py-2 px-4 rounded text-sm font-medium transition-all ml-3 
            ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
       >
         Comprar
       </button>
       <button
         onClick={addAnimal}
-        className={`py-2 px-4 rounded font-sm font-medium transition-all ml-3 
+        className={`py-2 px-4 rounded text-sm font-medium transition-all ml-3 
            ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-yellow-600 hover:bg-yellow-500 "}`}
       >
         Agregar

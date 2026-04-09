@@ -11,6 +11,9 @@ import './App.css'
 import ANIMALS from './lib/animals.js'
 import * as blockchain from './lib/blockchain.js'
 import { simplifyAmount, sumAllElements } from './lib/utils.js'
+import { GiHamburgerMenu } from "react-icons/gi";
+import { IoMdEyeOff, IoMdEye } from "react-icons/io";
+import DrawerMenu from './components/DrawerMenu.jsx';
 
 function App() {
 
@@ -18,10 +21,11 @@ function App() {
   let [selectedAnimals, setSelectedAnimals] = useState(Array(32).fill(0));
   let [selectedAnimalId, setSelectedAnimalId] = useState(null);
   let [sidebarOpen, setSidebarOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   let [roundIsActive, setRoundIsActive] = useState(false);
   let [currentRound, setCurrentRound] = useState(null);
   let [showAllowancePopup, setShowAllowancePopup] = useState(false);
-  //let [tokenAllowance, setAllowance] = useState(0);
+  let [tokenBalance, setTokenBalance] = useState(0);
   let [pendingTransaction, setPendingTransaction] = useState(null);
   let [roundInfo, setRoundInfo] = useState({
     totalPool: null,
@@ -35,9 +39,24 @@ function App() {
   });
   let [claimed, setClaimed] = useState(false);
   let [tickets, setTickets] = useState(1);
+  let [hideBalance, setHideBalance] = useState(true);
 
   const didWin = placedBets.some((bet) => bet.id === roundInfo.winningAnimal);
 
+  useEffect(() => {
+
+    async function fetchUserBalance() {
+
+      let balance = await blockchain.fetchTokenBalance();
+      //console.log("balance: " + balance);
+      setTokenBalance(balance);
+
+    }
+
+    fetchUserBalance();
+
+
+  }, [placedBets]);
 
   async function updateRoundInfo(round, bets) {
     //Returns an array, not an object
@@ -323,7 +342,7 @@ function App() {
 
   }
 
-  let roundStatusText = roundIsActive ? `🟢 Ronda #${currentRound} — ACTIVA` : `🔴 Ronda #${currentRound} — FINALIZADA`;
+  let roundStatusText = roundIsActive ? `🟢 Ronda ${currentRound}` : `🔴 Ronda ${currentRound}`;
 
 
   return (
@@ -340,16 +359,24 @@ function App() {
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
 
           {/* Top section - wheel + betting grid, locked to viewport height */}
-          <div className="grid md:grid-cols-2">
+          <div className="grid md:grid-cols-20">
 
             {/* Wheel */}
-            <div className="flex flex-col items-center justify-center h-screen py-10 px-1 overflow-hidden sticky top-0">
-              <h2 className='mb-6 font-bold text-xl'>{roundStatusText}</h2>
+            <div className="flex flex-col col-span-11 items-center justify-center h-screen pt-5 pb-10 overflow-hidden sticky top-0">
+              <div className='flex flex-row items-center bg-slate-600 mb-5 px-5 gap-6 self-start rounded-r-md sticky top-0 z-10'>
+                <h1 className='font-bold text-xl'>Crypto Animalitos</h1>
+                <h2 className='font-semibold text-md'>{roundStatusText}</h2>
+                <div className='bg-slate-600 hover:bg-slate-500 h-full py-3 px-2 flex flex-row items-center gap-1' onClick={() => setHideBalance(!hideBalance)}>
+                  <span className='text-md'>Balance: <b>{hideBalance ? '••••' : `${tokenBalance} $`}</b></span>
+                  {hideBalance ? <IoMdEyeOff className='text-lg' /> : <IoMdEye className='text-lg' />}
+                </div>
+                <GiHamburgerMenu className='text-2xl text-white transition-all duration-200 hover:scale-[1.1] active:scale-[0.98] cursor-pointer' onClick={() => setDrawerOpen((prev) => { setSidebarOpen(!prev); return !prev})} />
+              </div>
               <Wheel isSpinning={roundIsActive} winnerId={roundInfo.winningAnimal} highlightedId={selectedAnimalId} />
             </div>
 
             {/* Betting grid */}
-            <div className={`flex flex-col gap-2 box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"}`}>
+            <div className={`flex flex-col col-span-9 gap-2 box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"}`}>
               <BettingGrid
                 onSelectAnimal={selectAnimal}
                 selectedAnimal={null}
@@ -384,6 +411,11 @@ function App() {
         {/* Sticky sidebar */}
         <BetLedger bets={placedBets} cart={selectedAnimals} roundIsActive={roundIsActive} roundInfo={roundInfo} isOpen={sidebarOpen} roundNumber={currentRound} didWin={didWin} claimed={claimed} setClaimed={setClaimed} updateCartItem={updateCartItem} setTickets={setTickets} handleBuyAll={handleBuyAll} onToggle={() => { setSidebarOpen((state) => !state) }} />
 
+        <DrawerMenu
+          isOpen={sidebarOpen}
+          isDrawerOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        />
       </div>
     </>
   )

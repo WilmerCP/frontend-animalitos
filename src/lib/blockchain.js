@@ -291,6 +291,7 @@ export {
     fetchRoundInfo,
     fetchTotalAnimalBets,
     fetchClaimedStatus,
+    fetchTokenBalance,
     placeMultipleBets,
     CONTRACT,
     animalitos_abi as ANIMALITOS_ABI,
