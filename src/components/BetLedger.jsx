@@ -3,8 +3,11 @@ import { FaChevronLeft, FaChevronRight, FaPlus, FaMinus } from "react-icons/fa";
 import ClaimReward from './ClaimReward.jsx';
 import { useState, useEffect } from "react";
 import { claimReward, fetchTotalAnimalBets } from '../lib/blockchain.js'
+import { useGameContext } from "../store/game-context.jsx";
 
-function BetLedger({ bets = [], cart = [], roundNumber, roundInfo, roundIsActive, onToggle, isOpen, didWin, claimed, setClaimed, updateCartItem, handleBuyAll }) {
+function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle, isOpen, didWin, claimed, setClaimed, updateCartItem, handleBuyAll }) {
+
+    const { roundInfo } = useGameContext();
 
   let [earnings, setEarnings] = useState(null);
 

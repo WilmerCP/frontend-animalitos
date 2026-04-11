@@ -7,38 +7,27 @@ import AllowancePopup from '../components/AllowancePopup.jsx'
 import RoundDataSection from '../components/RoundDataSection.jsx'
 import ANIMALS from '../lib/animals.js'
 import * as blockchain from '../lib/blockchain.js'
-import { simplifyAmount, sumAllElements } from '../lib/utils.js'
+import { sumAllElements } from '../lib/utils.js'
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoMdEyeOff, IoMdEye } from "react-icons/io";
 import DrawerMenu from '../components/DrawerMenu.jsx';
-import StepCard from '../components/StepCard';
 import StepsSection from '../components/StepsSection.jsx'
+import { useGameContext } from "../store/game-context.jsx";
 
 function App() {
 
-  let [placedBets, setPlacedBets] = useState([]);
-  let [selectedAnimals, setSelectedAnimals] = useState(Array(32).fill(0));
-  let [selectedAnimalId, setSelectedAnimalId] = useState(null);
-  let [sidebarOpen, setSidebarOpen] = useState(true);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  let [roundIsActive, setRoundIsActive] = useState(false);
-  let [currentRound, setCurrentRound] = useState(null);
+  const { currentRound, setCurrentRound, roundIsActive, setRoundIsActive, tokenBalance,
+    setTokenBalance, hideBalance, setHideBalance, roundInfo,
+    setRoundInfo, drawerOpen, setDrawerOpen } = useGameContext();
+
+  let [placedBets, setPlacedBets] = useState([]); //local
+  let [selectedAnimals, setSelectedAnimals] = useState(Array(32).fill(0)); // local
+  let [selectedAnimalId, setSelectedAnimalId] = useState(null); // local
+  let [sidebarOpen, setSidebarOpen] = useState(true); // local
   let [showAllowancePopup, setShowAllowancePopup] = useState(false);
-  let [tokenBalance, setTokenBalance] = useState(0);
   let [pendingTransaction, setPendingTransaction] = useState(null);
-  let [roundInfo, setRoundInfo] = useState({
-    totalPool: null,
-    winningAnimal: null,
-    finished: null,
-    roundStartTime: null,
-    roundEndTime: null,
-    isSpecial: false,
-    claimablePrize: 0,
-    remainingPrize: 0
-  });
-  let [claimed, setClaimed] = useState(false);
-  let [tickets, setTickets] = useState(1);
-  let [hideBalance, setHideBalance] = useState(true);
+  let [claimed, setClaimed] = useState(false); //local
+  let [tickets, setTickets] = useState(1); //local
 
   const didWin = placedBets.some((bet) => bet.id === roundInfo.winningAnimal);
 
@@ -55,19 +44,27 @@ function App() {
     fetchUserBalance();
 
 
-  }, [placedBets]);
+  }, [placedBets, claimed]);
 
-  async function updateRoundInfo(round, bets) {
-    //Returns an array, not an object
-    let info = await blockchain.fetchRoundInfo(round);
-    console.log("ROUND INFO")
-    console.log(info)
+  useEffect(() => {
+    if (currentRound === null) return;
 
-    setRoundInfo(info);
+    async function fetchBets() {
+      const amounts = await blockchain.fetchUserBets(currentRound);
+      const bets = amounts
+        .map((amount, id) => ({ id, amount }))
+        .filter((bet) => bet.amount > 0);
+      setPlacedBets(bets);
+    }
 
-    if (bets.some((bet) => bet.id === info.winningAnimal)) {
+    fetchBets();
+  }, [currentRound]);
 
-      let status = await blockchain.fetchClaimedStatus(round);
+  useEffect(() => {
+
+    async function fetchClaimedStatus() {
+
+      let status = await blockchain.fetchClaimedStatus(currentRound);
 
       console.log("claimed: " + status)
 
@@ -75,75 +72,13 @@ function App() {
 
     }
 
-  }
+    if (!roundIsActive && placedBets.some((bet) => bet.id === roundInfo.winningAnimal)) {
+      console.log("fetching claimed status...")
+      fetchClaimedStatus();
 
-  useEffect(() => {
-    let unwatch;
-
-    async function fetchData() {
-      const isActive = await blockchain.fetchRoundStatus();
-      setRoundIsActive(isActive);
-
-      const round = await blockchain.fetchRoundNumber();
-      setCurrentRound(round);
-
-      const amounts = await blockchain.fetchUserBets(round);
-      const bets = amounts
-        .map((amount, id) => ({ id, amount }))
-        .filter((bet) => bet.amount > 0);
-      setPlacedBets(bets);
-
-      if (isActive) {
-        unwatch = blockchain.publicClient.watchContractEvent({
-          address: blockchain.CONTRACT,
-          abi: blockchain.ANIMALITOS_ABI,
-          eventName: 'RoundEnded',
-          onLogs: (logs) => {
-            console.log("Round ended event received:", logs);
-            logs.forEach((log) => {
-              const { roundNumber, winningAnimal } = log.args;
-              setRoundIsActive(false);
-              updateRoundInfo(round, bets);
-
-            });
-          },
-        });
-      } else {
-        updateRoundInfo(round, bets);
-
-        unwatch = blockchain.publicClient.watchContractEvent({
-          address: blockchain.CONTRACT,
-          abi: blockchain.ANIMALITOS_ABI,
-          eventName: 'RoundStarted',
-          onLogs: (logs) => {
-            console.log("Round started event received:", logs);
-            logs.forEach((log) => {
-              const { roundNumber } = log.args;
-              setCurrentRound(Number(roundNumber));
-              setRoundInfo({
-                totalPool: null,
-                winningAnimal: null,
-                finished: null,
-                roundStartTime: null,
-                roundEndTime: null,
-                isSpecial: false,
-                claimablePrize: 0,
-                remainingPrize: 0
-              });
-              setRoundIsActive(true);
-            });
-          },
-        });
-      }
     }
-
-    fetchData();
-
-    return () => {
-      if (unwatch) unwatch();
-    };
-  }, [roundIsActive]);
-
+  
+  }, [roundIsActive, roundInfo, placedBets]);
 
 
   async function placeBet(animalId, amount) {
@@ -151,8 +86,6 @@ function App() {
     setSidebarOpen(true)
 
     let allowance = await blockchain.fetchAllowance();
-
-    //setAllowance(allowance);
 
     if (allowance >= amount) {
 
@@ -199,6 +132,7 @@ function App() {
     });
 
     setSelectedAnimalId(null);
+    setSidebarOpen(true);
 
 
   }
@@ -419,20 +353,16 @@ function App() {
 
           {/* Below the fold - full width */}
           <div className="w-full bg-slate-950 text-white px-8 py-8">
-            <StepsSection/>
-            <RoundDataSection currentRound={currentRound} roundIsActive={roundIsActive} />
+            <StepsSection />
+            <RoundDataSection/>
           </div>
 
         </div>
 
         {/* Sticky sidebar */}
-        <BetLedger bets={placedBets} cart={selectedAnimals} roundIsActive={roundIsActive} roundInfo={roundInfo} isOpen={sidebarOpen} roundNumber={currentRound} didWin={didWin} claimed={claimed} setClaimed={setClaimed} updateCartItem={updateCartItem} setTickets={setTickets} handleBuyAll={handleBuyAll} onToggle={() => { setSidebarOpen((state) => !state) }} />
+        <BetLedger bets={placedBets} cart={selectedAnimals} roundIsActive={roundIsActive} isOpen={sidebarOpen} roundNumber={currentRound} didWin={didWin} claimed={claimed} setClaimed={setClaimed} updateCartItem={updateCartItem} setTickets={setTickets} handleBuyAll={handleBuyAll} onToggle={() => { setSidebarOpen((state) => !state) }} />
 
-        <DrawerMenu
-          isOpen={sidebarOpen}
-          isDrawerOpen={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-        />
+        <DrawerMenu/>
       </div>
     </>
   )

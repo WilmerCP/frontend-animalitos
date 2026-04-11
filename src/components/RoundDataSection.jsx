@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react"
 import { fetchRoundInfo } from '../lib/blockchain'
 import ANIMALS from '../lib/animals'
+import { useGameContext } from "../store/game-context.jsx";
 
-export default function RecentWinners({ currentRound, roundIsActive }) {
+export default function RoundDataSection() {
     const [rounds, setRounds] = useState([])
     const [loading, setLoading] = useState(true)
+
+    const { currentRound, roundIsActive } = useGameContext();
 
     useEffect(() => {
         async function loadRounds() {

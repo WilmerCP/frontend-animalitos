@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import ANIMALS from "../lib/animals.js";
 
 function TicketSelector({ animalId, onConfirm, onAdd, onClose, bets = [], compact, roundIsActive, tickets, setTickets }) {
@@ -124,17 +123,17 @@ function TicketSelector({ animalId, onConfirm, onAdd, onClose, bets = [], compac
       </div>
       <button
         onClick={placeBet}
-        className={`py-2 px-4 rounded text-sm font-medium transition-all ml-3 
+        className={`py-2 px-2 rounded text-sm font-medium transition-all ml-3 
            ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-red-500 hover:bg-red-400 "}`}
       >
         Comprar
       </button>
       <button
         onClick={addAnimal}
-        className={`py-2 px-4 rounded text-sm font-medium transition-all ml-3 
+        className={`py-2 px-2 rounded text-sm font-medium transition-all ml-3 
            ${disabled || !roundIsActive ? "bg-slate-600 hover:bg-slate-500" : "bg-yellow-600 hover:bg-yellow-500 "}`}
       >
-        Agregar
+        Carrito
       </button>
       <button onClick={onClose} className="text-slate-500 hover:text-white text-lg mx-2">
         ✕
