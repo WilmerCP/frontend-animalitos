@@ -23,6 +23,7 @@ export function GameContextProvider({ children }) {
     claimablePrize: 0,
     remainingPrize: 0
   });
+  let [jackpotAmount, setJackpotAmount] = useState(0);
 
   async function updateRoundInfo(round) {
     //Returns an array, not an object
@@ -31,6 +32,14 @@ export function GameContextProvider({ children }) {
     console.log(info)
 
     setRoundInfo(info);
+
+    if(info.isSpecial){
+
+      let jackpot = await blockchain.fetchJackpotAmount();
+
+      setJackpotAmount(jackpot);
+
+    }
 
   }
 
@@ -43,6 +52,8 @@ export function GameContextProvider({ children }) {
 
       const round = await blockchain.fetchRoundNumber();
       setCurrentRound(round);
+
+      updateRoundInfo(round);
 
       if (isActive) {
         unwatch = blockchain.publicClient.watchContractEvent({
@@ -82,6 +93,7 @@ export function GameContextProvider({ children }) {
                 remainingPrize: 0
               });
               setRoundIsActive(true);
+              setJackpotAmount(0);
             });
           },
         });
@@ -96,7 +108,7 @@ export function GameContextProvider({ children }) {
   }, [roundIsActive]);
 
   const value = {
-    currentRound, setCurrentRound, roundIsActive, setRoundIsActive, tokenBalance,
+    currentRound, setCurrentRound, roundIsActive, setRoundIsActive, tokenBalance, jackpotAmount,
     setTokenBalance, hideBalance, setHideBalance, roundInfo, setRoundInfo, drawerOpen, setDrawerOpen
   };
 

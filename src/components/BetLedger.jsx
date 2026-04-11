@@ -4,10 +4,11 @@ import ClaimReward from './ClaimReward.jsx';
 import { useState, useEffect } from "react";
 import { claimReward, fetchTotalAnimalBets } from '../lib/blockchain.js'
 import { useGameContext } from "../store/game-context.jsx";
+import JackpotBanner from "./JackpotBanner.jsx";
 
 function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle, isOpen, didWin, claimed, setClaimed, updateCartItem, handleBuyAll }) {
 
-    const { roundInfo } = useGameContext();
+    const { roundInfo, jackpotAmount } = useGameContext();
 
   let [earnings, setEarnings] = useState(null);
 
@@ -23,7 +24,7 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
     const winningBet = bets.find(bet => bet.id === winningId);
 
     const prize = (winningBet.amount * roundInfo.claimablePrize) / totalAnimalBets;
-    setEarnings(prize);
+    setEarnings(prize.toFixed(2));
 
 
   }
@@ -32,12 +33,14 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
 
     if (didWin) {
 
+      console.log("Calculating earnings")
+
       calculateEarnings();
 
 
     }
 
-  }, [didWin]);
+  }, [didWin, roundIsActive]);
 
   async function handleClaims() {
 
@@ -60,6 +63,8 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400 scrollbar-track-gray-200 scrollbar-track-zinc-200">
+
+        {roundInfo.isSpecial && <JackpotBanner amount={jackpotAmount}/>}
 
         {cartNotEmpty && roundIsActive &&
           <div className="space-y-2 p-3 rounded-xl border-2 border-dashed border-red-400 bg-yellow-400/5 mb-5">
@@ -123,7 +128,7 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
             {didWin && <ClaimReward earnings={earnings} claimed={claimed} onClaim={handleClaims} />}
             {bets.map((bet) => {
               const animal = ANIMALS[bet.id];
-              const isWinner = winningId === bet.id;
+              const isWinner = didWin && bet.id === winningId;
               return (
                 <div
                   key={bet.id}

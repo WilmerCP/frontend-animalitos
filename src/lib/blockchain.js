@@ -191,6 +191,19 @@ async function fetchClaimedStatus(round_number){
 
 }
 
+async function fetchJackpotAmount(){
+
+    const amount = await publicClient.readContract({
+          address: CONTRACT,
+          abi: animalitos_abi,
+          functionName: 'jackpotPool',
+          args: []
+        });
+
+    return simplifyAmount(amount);
+
+}
+
 async function placeBet(animalId,amount){
 
     const txHash = await walletClient.writeContract({
@@ -288,6 +301,7 @@ export {
     fetchAllowance,
     fetchUserBets,
     fetchRoundInfo,
+    fetchJackpotAmount,
     fetchTotalAnimalBets,
     fetchClaimedStatus,
     fetchTokenBalance,

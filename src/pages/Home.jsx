@@ -29,7 +29,7 @@ function App() {
   let [claimed, setClaimed] = useState(false); //local
   let [tickets, setTickets] = useState(1); //local
 
-  const didWin = placedBets.some((bet) => bet.id === roundInfo.winningAnimal);
+  const didWin = placedBets.some((bet) => bet.id === roundInfo.winningAnimal) && !roundIsActive;
 
   useEffect(() => {
 
@@ -37,7 +37,7 @@ function App() {
 
       let balance = await blockchain.fetchTokenBalance();
       //console.log("balance: " + balance);
-      setTokenBalance(balance);
+      setTokenBalance(balance.toFixed(2));
 
     }
 
