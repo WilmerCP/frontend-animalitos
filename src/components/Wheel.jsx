@@ -1,25 +1,42 @@
 import { useMemo, useEffect, useState } from "react";
 import ANIMALS from "../lib/animals.js";
 import Pointer from "./Pointer.jsx";
+import { SPIN_SEEN_KEY } from "../lib/utils.js";
 
 const SEGMENT_ANGLE = 360 / 32;
 
 
 
-function Wheel({ isSpinning, highlightedId, winnerId }) {
+function Wheel({ isSpinning, highlightedId, winnerId, roundId}) {
 
   const [rotation, setRotation] = useState(0);
   const [showWinner, setShowWinner] = useState(false);
 
+  const transitionSeconds = localStorage.getItem(SPIN_SEEN_KEY(roundId)) === "true" ? 0 : 15;
+
+  // After spin completes, mark it as seen
+  const handleSpinComplete = () => {
+    localStorage.setItem(SPIN_SEEN_KEY(roundId), "true")
+    cleanOldRounds()
+  }
+
+  // Keep only last 10 rounds seen
+  const cleanOldRounds = () => {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith("spin_seen_"))
+    if (keys.length > 10) keys.slice(0, keys.length - 10).forEach(k => localStorage.removeItem(k))
+  }
+
   useEffect(() => {
+
+    const alreadySeen = localStorage.getItem(SPIN_SEEN_KEY(roundId)) === "true"
     if (isSpinning == false && winnerId != null) {
-      setShowWinner(false); 
-      spinToWinner(winnerId);
+      setShowWinner(false);
+      spinToWinner(winnerId,alreadySeen);
       console.log("winner has id: " + winnerId)
-    }else{
+    } else {
       setShowWinner(false);
     }
-  }, [winnerId,isSpinning]);
+  }, [winnerId, isSpinning]);
 
   useEffect(() => {
     let raf;
@@ -36,14 +53,21 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
     return () => cancelAnimationFrame(raf);
   }, [isSpinning]);
 
-  const spinToWinner = (winnerId) => {
+  const spinToWinner = (winnerId, alreadySeen) => {
     const N = ANIMALS.length;
     const SEGMENT_ANGLE = 360 / N;
 
     const targetAngle = winnerId * SEGMENT_ANGLE + SEGMENT_ANGLE / 2;
 
+    if(alreadySeen){
+      console.log("Spin already seen for round " + roundId + ", skipping animation");
+      setRotation(targetAngle);
+      setShowWinner(true);
+      return;
+    }
+
     // Añadimos varias vueltas extra
-    const extraRotations = 5;
+    const extraRotations = 15;
     const finalAngle = targetAngle + 360 * extraRotations;
 
     // Animación CSS para girar rápido y detenerse en el animal
@@ -51,8 +75,9 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
     setTimeout(() => {
       setRotation(finalAngle);
       setTimeout(() => {
-      setShowWinner(true); // Show winner label after animation
-    }, 4000);
+        setShowWinner(true); // Show winner label after animation
+        handleSpinComplete(); // Mark this spin as seen
+      }, 15000);
     }, 50);
   };
 
@@ -101,10 +126,11 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
             transform={`rotate(${textRotation}, ${textX}, ${textY})`}
             fill="hsl(40, 20%, 94%)"
             fontSize="18"
-            fontFamily="'Cormorant Garamond', serif"
+            fontFamily="'Roboto', sans-serif"
             fontWeight="600"
           >
-            {animal.emoji}
+            <tspan x={textX} dy="0">{animal.emoji}</tspan>
+            <tspan x={textX} dy="1.5em" fontSize="12">{animal.id + 1}</tspan>
           </text>
         </g>
       );
@@ -118,7 +144,7 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
       {showWinner && winnerId != null &&
         <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 rounded-xl
           shadow-lg border-4 border-slate-900 text-black font-bold text-2xl drop-shadow-[0_2px_8px_rgba(255,215,0,0.7)] text-center p-2 animate-in fade-in duration-500">
-          {`Ganador:`} <br/>
+          {`Ganador:`} <br />
           {`${ANIMALS[winnerId].name} ${ANIMALS[winnerId].emoji}`}
         </span>}
       <svg
@@ -127,7 +153,7 @@ function Wheel({ isSpinning, highlightedId, winnerId }) {
         style={{
           transform: `rotate(-${rotation}deg)`,
           transition: isSpinning == false
-            ? "transform 4s cubic-bezier(0.15, 0.6, 0.25, 1)"
+            ? `transform ${transitionSeconds}s cubic-bezier(0.15, 0.6, 0.25, 1)`
             : "none"
         }}
       >

@@ -5,12 +5,17 @@ import { useState, useEffect } from "react";
 import { claimReward, fetchTotalAnimalBets } from '../lib/blockchain.js'
 import { useGameContext } from "../store/game-context.jsx";
 import JackpotBanner from "./JackpotBanner.jsx";
+import { SPIN_SEEN_KEY } from "../lib/utils.js";
 
 function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle, isOpen, didWin, claimed, setClaimed, updateCartItem, handleBuyAll }) {
 
-    const { roundInfo, jackpotAmount } = useGameContext();
+  const { roundInfo, jackpotAmount } = useGameContext();
+
+  const transitionSeconds = localStorage.getItem(SPIN_SEEN_KEY(roundNumber)) === "true" ? 0 : 15;
 
   let [earnings, setEarnings] = useState(null);
+
+  const [showClaim, setShowClaim] = useState(false);
 
   const winningId = roundInfo.winningAnimal;
 
@@ -24,23 +29,27 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
     const winningBet = bets.find(bet => bet.id === winningId);
 
     const prize = (winningBet.amount * roundInfo.claimablePrize) / totalAnimalBets;
+
+    console.log(`prize: ${prize} = (winningBet.amount: ${winningBet.amount} * roundInfo.claimablePrize: ${roundInfo.claimablePrize}) / totalAnimalBets: ${totalAnimalBets}`);
+
     setEarnings(prize.toFixed(2));
 
 
   }
 
   useEffect(() => {
+  if (didWin) {
+    calculateEarnings();
+    setShowClaim(false);
 
-    if (didWin) {
-
-      console.log("Calculating earnings")
-
-      calculateEarnings();
-
-
+    if (transitionSeconds === 0) {
+      setShowClaim(true); // already seen the spin, show immediately
+    } else {
+      const timer = setTimeout(() => setShowClaim(true), transitionSeconds * 1000);
+      return () => clearTimeout(timer);
     }
-
-  }, [didWin, roundIsActive]);
+  }
+}, [didWin, roundIsActive, roundInfo.claimablePrize]);
 
   async function handleClaims() {
 
@@ -64,7 +73,7 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
 
       <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400 scrollbar-track-gray-200 scrollbar-track-zinc-200">
 
-        {roundInfo.isSpecial && <JackpotBanner amount={jackpotAmount}/>}
+        {roundInfo.isSpecial && <JackpotBanner amount={jackpotAmount} />}
 
         {cartNotEmpty && roundIsActive &&
           <div className="space-y-2 p-3 rounded-xl border-2 border-dashed border-red-400 bg-yellow-400/5 mb-5">
@@ -125,10 +134,10 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
           </p>
         ) : (
           <div className="space-y-2">
-            {didWin && <ClaimReward earnings={earnings} claimed={claimed} onClaim={handleClaims} />}
+            {didWin && showClaim && <ClaimReward earnings={earnings} claimed={claimed} onClaim={handleClaims} />}
             {bets.map((bet) => {
               const animal = ANIMALS[bet.id];
-              const isWinner = didWin && bet.id === winningId;
+              const isWinner = didWin && showClaim && bet.id === winningId;
               return (
                 <div
                   key={bet.id}

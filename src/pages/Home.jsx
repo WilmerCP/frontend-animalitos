@@ -13,6 +13,7 @@ import { IoMdEyeOff, IoMdEye } from "react-icons/io";
 import DrawerMenu from '../components/DrawerMenu.jsx';
 import StepsSection from '../components/StepsSection.jsx'
 import { useGameContext } from "../store/game-context.jsx";
+import RemainingTime from '../components/RemainingTime.jsx'
 
 function App() {
 
@@ -312,7 +313,7 @@ function App() {
           <div className="grid md:grid-cols-20">
 
             {/* Wheel */}
-            <div className="flex flex-col col-span-11 items-center justify-center h-screen pt-5 pb-10 overflow-hidden sticky top-0">
+            <div className="flex flex-col col-span-11 items-center justify-center h-screen pt-5 pb-10 overflow-hidden sticky top-0 group">
               <div className='flex flex-row items-center bg-slate-600 mb-5 px-5 gap-6 self-start rounded-r-md sticky top-0 z-10'>
                 <h1 className='font-bold text-xl'>Crypto Animalitos</h1>
                 <h2 className='font-semibold text-md'>{roundStatusText}</h2>
@@ -322,7 +323,8 @@ function App() {
                 </div>
                 <GiHamburgerMenu className='text-2xl text-white transition-all duration-200 hover:scale-[1.1] active:scale-[0.98] cursor-pointer' onClick={() => setDrawerOpen((prev) => { setSidebarOpen(!prev); return !prev })} />
               </div>
-              <Wheel isSpinning={roundIsActive} winnerId={roundInfo.winningAnimal} highlightedId={selectedAnimalId} />
+              <Wheel isSpinning={roundIsActive} winnerId={roundInfo.winningAnimal} highlightedId={selectedAnimalId} roundId={currentRound} />
+              {roundIsActive && <RemainingTime timestamp={roundInfo.roundEndTime}/>}
             </div>
 
             {/* Betting grid */}

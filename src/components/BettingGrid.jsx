@@ -30,7 +30,7 @@ function BettingGrid({
               ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
             `}
           >
-            <span className="text-lg leading-none">{animal.emoji}</span>
+            <span className="text-lg leading-none">{`${animal.id +1} ${animal.emoji}`}</span>
             <span className="mt-0.5 text-sm font-semibold truncate w-full text-center">
               {animal.name}
             </span>

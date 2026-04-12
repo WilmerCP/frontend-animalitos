@@ -32,3 +32,5 @@ export function formatAmountArray(list){
   return formattedList;
 
 }
+
+export const SPIN_SEEN_KEY = (roundId) => `spin_seen_${roundId}`
