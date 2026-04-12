@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+.env.mainnet
+.env.testnet
 
 # Editor directories and files
 .vscode/*

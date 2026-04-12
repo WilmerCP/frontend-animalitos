@@ -6,48 +6,68 @@ const abi = [...animalitos_abi, ...usdt_abi];
 import { formatAmount, simplifyAmount, formatAmountArray } from './utils';
 
 import { createPublicClient, http, createWalletClient, custom } from 'viem';
-import { hardhat } from 'viem/chains'
+import { polygonAmoy, hardhat } from 'viem/chains'; 
 import { parseAccount } from 'viem/accounts';
 
-const CONTRACT = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
-const USDT_CONTRACT = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-const HARDHAT_CHAIN_ID = "0x7A69"; // 31337 in hex
+
+const MODE = import.meta.env.VITE_MODE || 'local';
+
+const CONTRACT = import.meta.env.VITE_CONTRACT_ADDRESS;
+const USDT_CONTRACT = import.meta.env.VITE_USDT_ADDRESS;
+const RPC_URL = import.meta.env.VITE_RPC_URL;
+const CHAIN_ID = import.meta.env.VITE_CHAIN_ID;
+
+const CHAIN = MODE == 'local' ? hardhat : polygonAmoy;
 
 const publicClient = createPublicClient({
-    transport: http('http://localhost:8545'), // default Hardhat RPC URL
-    chain: hardhat
+    transport: http(RPC_URL), 
+    chain: CHAIN
 });
 
-//Switch MetaMask to Hardhat first
+//Switch MetaMask to correct chain first
 await window.ethereum.request({
     method: "wallet_switchEthereumChain",
-    params: [{ chainId: HARDHAT_CHAIN_ID }],
+    params: [{ chainId: CHAIN_ID }],
 });
 
 const [account] = await window.ethereum.request({ method: 'eth_requestAccounts' });
 
 const walletClient = createWalletClient({
-    chain: hardhat,
+    chain: CHAIN,
     transport: custom(window.ethereum),
     account: parseAccount(account),
 })
 
 
-
+//For debugging
 async function getChainId() {
     const chainId = await publicClient.getChainId();
     console.log('Chain ID:', chainId);
     return chainId;
 }
 
+async function getGasFees() {
+    // Skip fee estimation for local networks
+    if (publicClient.chain.id === hardhat.id) return {}
+    
+    const fees = await publicClient.estimateFeesPerGas()
+    return {
+        maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
+        maxFeePerGas: fees.maxFeePerGas,
+    }
+}
+
 async function approve(amount) {
+
+  const fees = await publicClient.estimateFeesPerGas()
 
     const txHash = await walletClient.writeContract({
         address: USDT_CONTRACT,
         abi: usdt_abi,
         functionName: 'approve',
         args: [CONTRACT, formatAmount(amount)],
-        chain: hardhat
+        chain: CHAIN,
+        ...await getGasFees()
     })
 
     console.log('Transaction sent:', txHash)
@@ -211,8 +231,8 @@ async function placeBet(animalId,amount){
       abi: abi,
       functionName: 'placeBet',
       args: [animalId, formatAmount(amount)],
-      chain: hardhat,
-      gas: 500000n
+      chain: CHAIN,
+      ...await getGasFees()
     })
 
     console.log('Transaction sent:', txHash)
@@ -240,8 +260,8 @@ async function claimReward(round_number){
       abi: abi,
       functionName: 'claimPrize',
       args: [round_number],
-      chain: hardhat,
-      gas: 500000n
+      chain: CHAIN,
+      ...await getGasFees()
     })
 
     console.log('Transaction sent:', txHash)
@@ -269,7 +289,8 @@ async function placeMultipleBets(list){
       abi: abi,
       functionName: 'placeMultipleBets',
       args: [formatAmountArray(list)],
-      chain: hardhat,
+      chain: CHAIN,
+      ...await getGasFees()
     })
 
     console.log('Transaction sent:', txHash)
