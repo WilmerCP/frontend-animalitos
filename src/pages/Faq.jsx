@@ -35,7 +35,6 @@ function FAQItem({ q, a }) {
 export default function FAQPage() {
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-[#0b1220] text-white p-6 space-y-8 md:px-30">
 
         <StepsSection />

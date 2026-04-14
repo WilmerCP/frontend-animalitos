@@ -55,7 +55,7 @@ export default function RoundDataSection() {
     }
 
     return (
-        <div className="p-4 text-white  bg-white/5 border border-white/10 rounded-xl w-full flex">
+        <div className="p-4 text-white  bg-white/5 border border-white/10 rounded-xl w-full flex md:gap-0 gap-8 md:flex-row flex-col">
             <div className="w-full md:w-1/2 flex justify-center items-center flex-col">
 
                 <h2 className="text-lg font-bold mb-3 flex items-center gap-2">

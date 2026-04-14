@@ -15,6 +15,8 @@ import StepsSection from '../components/StepsSection.jsx'
 import { useGameContext } from "../store/game-context.jsx";
 import RemainingTime from '../components/RemainingTime.jsx'
 import ConnectWallet from '../components/ConnectWallet.jsx'
+import GameHeader from '../components/GameHeader.jsx'
+import { useIsMobile } from '../hooks/useIsMobile.js'
 
 function App() {
 
@@ -32,6 +34,8 @@ function App() {
   let [tickets, setTickets] = useState(1); //local
 
   const didWin = placedBets.some((bet) => bet.id === roundInfo.winningAnimal) && !roundIsActive;
+
+  const isMobile = useIsMobile();
 
   useEffect(() => {
 
@@ -136,7 +140,7 @@ function App() {
     });
 
     setSelectedAnimalId(null);
-    setSidebarOpen(true);
+    setSidebarOpen(!isMobile);
 
 
   }
@@ -301,6 +305,7 @@ function App() {
 
   return (
     <>
+      {isMobile && <GameHeader/>}
       {showAllowancePopup &&
         <AllowancePopup onClose={() => setShowAllowancePopup(false)}
           onConfirm={allowSpending}
@@ -315,11 +320,11 @@ function App() {
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
 
           {/* Top section - wheel + betting grid, locked to viewport height */}
-          <div className="grid md:grid-cols-20">
+          <div className="md:grid md:grid-cols-20">
 
             {/* Wheel */}
-            <div className="flex flex-col col-span-11 items-center justify-center h-screen pt-5 pb-10 overflow-hidden sticky top-0 group">
-              <div className='flex flex-row items-center bg-slate-600 mb-5 px-5 gap-6 self-start rounded-r-md sticky top-0 z-10'>
+            <div className="flex md:flex-col flex-col-reverse md:col-span-11 items-center justify-center md:h-screen md:pt-5 md:pb-10 pt-7 overflow-hidden sticky top-0 group md:gap-0 gap-5 md:px-0 px-1 pb-5">
+              <div className='hidden md:flex flex-row items-center bg-slate-600 mb-5 px-5 gap-6 self-start rounded-r-md sticky top-0 z-10'>
                 <h1 className='font-bold text-xl'>Crypto Animalitos</h1>
                 <h2 className='font-semibold text-md'>{roundStatusText}</h2>
                 <div className='bg-slate-600 hover:bg-slate-500 h-full py-3 px-2 flex flex-row items-center gap-1' onClick={() => setHideBalance(!hideBalance)}>
@@ -333,7 +338,7 @@ function App() {
             </div>
 
             {/* Betting grid */}
-            <div className={`flex flex-col col-span-9 gap-2 box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"}`}>
+            <div className={`flex flex-col md:col-span-9 gap-2 box-border flex-1 px-5 pb-10 ${sidebarOpen ? "md:pr-12 md:py-8" : "md:px-10 md:py-10"}`}>
               <BettingGrid
                 onSelectAnimal={selectAnimal}
                 selectedAnimal={null}
@@ -349,7 +354,7 @@ function App() {
                   onConfirm={placeBet}
                   onAdd={addToCart}
                   animalId={selectedAnimalId}
-                  compact={sidebarOpen}
+                  compact={isMobile || sidebarOpen}
                   roundIsActive={roundIsActive}
                   tickets={tickets}
                   setTickets={changeTickets}

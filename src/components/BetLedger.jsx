@@ -1,5 +1,5 @@
 import ANIMALS from "../lib/animals.js";
-import { FaChevronLeft, FaChevronRight, FaPlus, FaMinus } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaPlus, FaMinus, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import ClaimReward from './ClaimReward.jsx';
 import { useState, useEffect } from "react";
 import { claimReward, fetchTotalAnimalBets } from '../lib/blockchain.js'
@@ -38,18 +38,18 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
   }
 
   useEffect(() => {
-  if (didWin) {
-    calculateEarnings();
-    setShowClaim(false);
+    if (didWin) {
+      calculateEarnings();
+      setShowClaim(false);
 
-    if (transitionSeconds === 0) {
-      setShowClaim(true); // already seen the spin, show immediately
-    } else {
-      const timer = setTimeout(() => setShowClaim(true), transitionSeconds * 1000);
-      return () => clearTimeout(timer);
+      if (transitionSeconds === 0) {
+        setShowClaim(true); // already seen the spin, show immediately
+      } else {
+        const timer = setTimeout(() => setShowClaim(true), transitionSeconds * 1000);
+        return () => clearTimeout(timer);
+      }
     }
-  }
-}, [didWin, roundIsActive, roundInfo.claimablePrize]);
+  }, [didWin, roundIsActive, roundInfo.claimablePrize]);
 
   async function handleClaims() {
 
@@ -65,7 +65,13 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
 
 
   return (
-    <div className={`betledger h-screen sticky top-0 bg-zinc-200 text-card-foreground flex flex-col transition-all duration-300 ${isOpen ? "md:translate-x-0 md:w-1/5" : "md:translate-x-full md:w-0"} `}>
+    <div className={`
+          betledger bg-zinc-200 text-card-foreground flex flex-col transition-all duration-300
+          max-h-screen w-full
+          md:sticky md:top-0 md:h-screen md:max-h-screen
+          ${isOpen ? "md:translate-x-0 md:w-1/5" : "md:translate-x-full md:w-0"}
+          `}
+    >
       <div className="p-4 border-b border-gray-300">
         <h2 className=" text-xl font-bold text-stone-950 tracking-tight text-start">Apuestas</h2>
         <p className="text-xs mt-0.5 text-stone-800 text-start">Ronda #{roundNumber} - {roundIsActive ? "Activa" : "Finalizada"}</p>
@@ -173,7 +179,7 @@ function BetLedger({ bets = [], cart = [], roundNumber, roundIsActive, onToggle,
       </div>
 
       <button
-        className="absolute left-[-32px] bottom-6 bg-zinc-200 text-stone-900 hover:text-yellow-500 rounded-l-md p-2  transition"
+        className="md:absolute md:block hidden md:left-[-32px] md:bottom-6 bg-zinc-200 text-stone-900 hover:text-yellow-500 rounded-l-md p-2  transition"
         onClick={() => onToggle()}
       >
         {isOpen ? <FaChevronRight /> : <FaChevronLeft />}

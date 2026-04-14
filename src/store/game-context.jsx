@@ -28,6 +28,37 @@ export function GameContextProvider({ children }) {
   let [jackpotAmount, setJackpotAmount] = useState(0);
   let [walletState, setWalletState] = useState(initialAccount ? 'connected' : 'no-metamask');
 
+  const [remaining, setRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [roundStatus, setRoundStatus] = useState('active');
+
+  useEffect(() => {
+    const targetMs = roundInfo.roundEndTime;
+    let interval
+
+    function tick() {
+      const diff = targetMs - Date.now()
+      if (diff <= 0) {
+        setRemaining({ hours: 0, minutes: 0, seconds: 0 })
+        setRoundStatus(roundIsActive ? 'pending' : 'finished');
+        clearInterval(interval)
+        return
+      }
+      const totalSec = diff / 1000
+      setRemaining({
+        hours: Math.floor(totalSec / 3600),
+        minutes: Math.floor((totalSec % 3600) / 60),
+        seconds: Math.floor(totalSec % 60),
+      })
+
+      setRoundStatus(roundIsActive ? 'active' : 'finished');
+
+    }
+
+    tick()
+    interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [roundInfo]);
+
   useEffect(() => {
     const connect = async () => {
       const account = await blockchain.connectMetaMask();
@@ -123,27 +154,27 @@ export function GameContextProvider({ children }) {
   }, [roundIsActive]);
 
   useEffect(() => {
-  if (!window.ethereum) return;
+    if (!window.ethereum) return;
 
-  const handleAccountChange = async (accounts) => {
+    const handleAccountChange = async (accounts) => {
 
-    if (accounts[0]) {
-      setWalletState('changing');
-      await blockchain.connectMetaMask(); // re-runs with new account
-      setWalletState('connected');
-    } else {
-      setWalletState('no-metamask');
-    }
-  };
+      if (accounts[0]) {
+        setWalletState('changing');
+        await blockchain.connectMetaMask(); // re-runs with new account
+        setWalletState('connected');
+      } else {
+        setWalletState('no-metamask');
+      }
+    };
 
-  window.ethereum.on('accountsChanged', handleAccountChange);
-  return () => window.ethereum.removeListener('accountsChanged', handleAccountChange);
-}, []);
+    window.ethereum.on('accountsChanged', handleAccountChange);
+    return () => window.ethereum.removeListener('accountsChanged', handleAccountChange);
+  }, []);
 
   const value = {
     currentRound, setCurrentRound, roundIsActive, setRoundIsActive, tokenBalance, jackpotAmount,
     setTokenBalance, hideBalance, setHideBalance, roundInfo, setRoundInfo, drawerOpen, setDrawerOpen,
-    walletState, setWalletState
+    walletState, setWalletState, remaining
   };
 
   return (
