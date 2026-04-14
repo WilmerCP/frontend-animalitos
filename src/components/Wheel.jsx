@@ -141,7 +141,7 @@ function Wheel({ isSpinning, highlightedId, winnerId, roundId}) {
     <div className="relative md:flex-1 w-full h-full md:w-auto aspect-square mx-0">
       {/* Pointer component positioned above the wheel */}
       <Pointer />
-      {showWinner && winnerId != null &&
+      {showWinner && winnerId != null && !isSpinning &&
         <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 rounded-xl
           shadow-lg border-4 border-slate-900 text-black font-bold text-2xl drop-shadow-[0_2px_8px_rgba(255,215,0,0.7)] text-center p-2 animate-in fade-in duration-500">
           {`Ganador:`} <br />

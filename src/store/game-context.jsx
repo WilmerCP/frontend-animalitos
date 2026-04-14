@@ -1,19 +1,21 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import * as blockchain from '../lib/blockchain.js';
-import { simplifyAmount, sumAllElements } from '../lib/utils.js';
+import { useLoaderData } from 'react-router-dom';
 
 const GameContext = createContext(null);
 
 export function GameContextProvider({ children }) {
+
+  let { initialAccount, initialRoundNumber, initialRoundInfo, initialRoundIsActive } = useLoaderData();
 
   let [drawerOpen, setDrawerOpen] = useState(false);
 
   let [tokenBalance, setTokenBalance] = useState(0);
   let [hideBalance, setHideBalance] = useState(true);
 
-  let [roundIsActive, setRoundIsActive] = useState(false);
-  let [currentRound, setCurrentRound] = useState(null);
-  let [roundInfo, setRoundInfo] = useState({
+  let [roundIsActive, setRoundIsActive] = useState(initialRoundIsActive !== null ? initialRoundIsActive : false);
+  let [currentRound, setCurrentRound] = useState(initialRoundNumber);
+  let [roundInfo, setRoundInfo] = useState(initialRoundInfo ? initialRoundInfo : {
     totalPool: null,
     winningAnimal: null,
     finished: null,
@@ -24,6 +26,19 @@ export function GameContextProvider({ children }) {
     remainingPrize: 0
   });
   let [jackpotAmount, setJackpotAmount] = useState(0);
+  let [walletState, setWalletState] = useState(initialAccount ? 'connected' : 'no-metamask');
+
+  useEffect(() => {
+    const connect = async () => {
+      const account = await blockchain.connectMetaMask();
+      if (account !== null) {
+        setWalletState('connected');
+      } else {
+        setWalletState('no-metamask');
+      }
+    };
+    connect();
+  }, []);
 
   async function updateRoundInfo(round) {
     //Returns an array, not an object
@@ -33,7 +48,7 @@ export function GameContextProvider({ children }) {
 
     setRoundInfo(info);
 
-    if(info.isSpecial){
+    if (info.isSpecial) {
 
       let jackpot = await blockchain.fetchJackpotAmount();
 
@@ -107,9 +122,28 @@ export function GameContextProvider({ children }) {
     };
   }, [roundIsActive]);
 
+  useEffect(() => {
+  if (!window.ethereum) return;
+
+  const handleAccountChange = async (accounts) => {
+
+    if (accounts[0]) {
+      setWalletState('changing');
+      await blockchain.connectMetaMask(); // re-runs with new account
+      setWalletState('connected');
+    } else {
+      setWalletState('no-metamask');
+    }
+  };
+
+  window.ethereum.on('accountsChanged', handleAccountChange);
+  return () => window.ethereum.removeListener('accountsChanged', handleAccountChange);
+}, []);
+
   const value = {
     currentRound, setCurrentRound, roundIsActive, setRoundIsActive, tokenBalance, jackpotAmount,
-    setTokenBalance, hideBalance, setHideBalance, roundInfo, setRoundInfo, drawerOpen, setDrawerOpen
+    setTokenBalance, hideBalance, setHideBalance, roundInfo, setRoundInfo, drawerOpen, setDrawerOpen,
+    walletState, setWalletState
   };
 
   return (

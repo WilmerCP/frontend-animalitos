@@ -14,12 +14,13 @@ import DrawerMenu from '../components/DrawerMenu.jsx';
 import StepsSection from '../components/StepsSection.jsx'
 import { useGameContext } from "../store/game-context.jsx";
 import RemainingTime from '../components/RemainingTime.jsx'
+import ConnectWallet from '../components/ConnectWallet.jsx'
 
 function App() {
 
   const { currentRound, setCurrentRound, roundIsActive, setRoundIsActive, tokenBalance,
     setTokenBalance, hideBalance, setHideBalance, roundInfo,
-    setRoundInfo, drawerOpen, setDrawerOpen } = useGameContext();
+    setRoundInfo, drawerOpen, setDrawerOpen, walletState } = useGameContext();
 
   let [placedBets, setPlacedBets] = useState([]); //local
   let [selectedAnimals, setSelectedAnimals] = useState(Array(32).fill(0)); // local
@@ -42,10 +43,12 @@ function App() {
 
     }
 
-    fetchUserBalance();
+    if (walletState === 'connected') {
+      fetchUserBalance();
+    }
 
 
-  }, [placedBets, claimed]);
+  }, [placedBets, claimed, walletState]);
 
   useEffect(() => {
     if (currentRound === null) return;
@@ -59,7 +62,7 @@ function App() {
     }
 
     fetchBets();
-  }, [currentRound]);
+  }, [currentRound,walletState]);
 
   useEffect(() => {
 
@@ -79,7 +82,7 @@ function App() {
 
     }
   
-  }, [roundIsActive, roundInfo, placedBets]);
+  }, [roundIsActive, roundInfo, placedBets, walletState]);
 
 
   async function placeBet(animalId, amount) {
@@ -303,6 +306,8 @@ function App() {
           onConfirm={allowSpending}
           onConfirmSingle={allowTransaction}
           animal={ANIMALS.find(a => a.id === selectedAnimalId)?.name} />}
+
+      <ConnectWallet/>
 
       <div className='flex flex-col md:flex-row w-full md:h-screen overflow-x-hidden bg-slate-950 text-white'>
 
